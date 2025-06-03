@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>📁 Contenuti caricati</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <style>
+    .thumb { height: 150px; object-fit: cover; }
+    .file-entry { transition: all 0.2s ease; }
+    .file-entry:hover { background-color: #f8f9fa; }
+    .plyr__video-wrapper { max-height: 400px; overflow: hidden; }
+    .dropzone {
+      border: 2px dashed #6c757d;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+      color: #6c757d;
+      margin-bottom: 2rem;
+      transition: background-color 0.3s ease;
+    }
+    .dropzone.dragover { background-color: #e9ecef; }
+    #progressBar {
+      height: 20px;
+      margin-top: 1rem;
+      display: none;
+    }
+    .icon-preview { font-size: 3rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body class="bg-light">
+<div class="container py-4">
+
+
+<!-- ✅ Toast di successo -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
+  <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        ✅ Operazione completata con successo!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Chiudi"></button>
+    </div>
+  </div>
+</div>
+
+  <!-- 🔝 Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📁 <strong>Contenuti caricati</strong></h2>
+    <a href="/logout" class="btn btn-outline-danger">📪 Logout</a>
+  </div>
+
+   <!-- 🔍 Ricerca e ordinamento -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <input type="text" id="searchInput" class="form-control" placeholder="🔍 Cerca file o cartella...">
+    </div>
+    <div class="col-md-3">
+      <select id="filterSelect" class="form-select">
+        <option value="all">📁 Tutti i file</option>
+        <option value="image">📸 Solo immagini</option>
+        <option value="video">🎮 Solo video</option>
+        <option value="pdf">📄 Solo PDF</option>
+        <option value="audio">🎵 Solo audio</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select id="sortSelect" class="form-select">
+        <option value="name">🔠 Ordina per nome</option>
+        <option value="date">🕒 Ordina per data</option>
+      </select>
+    </div>
+  </div>
+<!-- 📝 Form identificativo -->
+<div class="card p-3 mb-3 shadow-sm">
+  <div class="row g-2">
+    <div class="col-md-3">
+      <input type="text" id="lineaInput" class="form-control" placeholder="Linea" required>
+    </div>
+    <div class="col-md-3">
+      <input type="text" id="commessaInput" class="form-control" placeholder="Commessa" required>
+    </div>
+    <div class="col-md-3">
+      <input type="text" id="matricolaInput" class="form-control" placeholder="Matricola" required>
+    </div>
+    <div class="col-md-3">
+      <input type="text" id="itemInput" class="form-control" placeholder="Item" required>
+    </div>
+  </div>
+</div>
+
+ <!-- 📄 Drag & Drop Upload -->
+  <div id="dropzone" class="dropzone">
+    👡 Trascina qui i tuoi file o clicca per selezionarli
+    <input type="file" id="fileInput" class="d-none" multiple>
+    <div class="progress" id="progressBar">
+      <div class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+    </div>
+  </div>
+
+  <!-- 📄 Upload -->
+  <div class="mb-4 d-flex gap-2">
+    <a href="/upload-ui" class="btn btn-primary">📄 Carica semplici</a>
+    <a href="/upload-advanced-ui" class="btn btn-outline-primary">🧠 Upload Avanzato</a>
+  </div>
+
+  <!-- 📸 Immagini e Video -->
+  <h4>📸 Immagini e Video caricati</h4>
+  <div class="row" id="imageList">
+    {% for file in images %}
+    <div class="col-sm-6 col-md-4 col-lg-3 mb-4 file-entry" data-name="{{ file.path.split('/')[-1] }}" data-type="{{ file.type }}" data-date="{{ file.created }}">
+      <div class="card h-100 shadow-sm">
+        {% if file.type == 'image' %}
+          <img src="/download/{{ file.path }}" class="card-img-top thumb" alt="preview">
+        {% elif file.type == 'video' %}
+          <video class="card-img-top thumb" muted>
+            <source src="/download/{{ file.path }}" type="video/mp4">
+          </video>
+        {% endif %}
+        <div class="card-body p-2">
+          <h6 class="card-title text-truncate">{{ file.path.split('/')[-1] }}</h6>
+          <a href="/download/{{ file.path }}" target="_blank" class="btn btn-sm btn-primary w-100 mb-1">📅 Scarica</a>
+          {% if file.type == 'video' %}
+          <button class="btn btn-sm btn-outline-dark w-100 mb-1 play-video-btn" data-path="/download/{{ file.path }}" data-bs-toggle="modal" data-bs-target="#videoModal">🎬 Riproduci</button>
+          {% endif %}
+          <button class="btn btn-sm btn-outline-danger w-100 delete-btn" data-path="{{ file.path }}">🗑 Elimina</button>
+          <button class="btn btn-sm btn-outline-secondary w-100 mt-1" data-bs-toggle="modal" data-bs-target="#detailsModal" data-name="{{ file.path.split('/')[-1] }}" data-date="{{ file.created }}" data-size="{{ file.size_kb }}">🔍 Dettagli</button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 🔍 Modale dettagli -->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">Dettagli file</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Nome:</strong> <span id="modalName"></span></p>
+          <p><strong>Data creazione:</strong> <span id="modalDate"></span></p>
+          <p><strong>Dimensione:</strong> <span id="modalSize"></span> KB</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎮 Modale video -->
+<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title">🎮 Anteprima Video</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <video id="modalVideoPlayer" class="w-100 plyr-video" controls autoplay playsinline>
+          <source src="" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const player = new Plyr('#modalVideoPlayer', {
+    controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen', 'download'],
+    autoplay: true
+  });
+
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+  const progressBar = document.getElementById("progressBar");
+  const progressFill = progressBar.querySelector(".progress-bar");
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    handleFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+  function handleFiles(files) {
+    const linea = document.getElementById("lineaInput").value.trim();
+    const commessa = document.getElementById("commessaInput").value.trim();
+    const matricola = document.getElementById("matricolaInput").value.trim();
+    const item = document.getElementById("itemInput").value.trim();
+
+    if (!linea || !commessa || !matricola || !item) {
+      alert("⚠️ Compila tutti i campi: linea, commessa, matricola, item");
+      return;
+    }
+
+    [...files].forEach((file, index) => {
+      const estensione = file.name.split(".").pop();
+      const filename = `${linea}_${commessa}_${matricola}_${item}${files.length > 1 ? `_n${index+1}` : ""}.${estensione}`;
+
+      const formData = new FormData();
+      formData.append("file", file, filename);
+      formData.append("linea", linea);
+      formData.append("commessa", commessa);
+      formData.append("matricola", matricola);
+      formData.append("item", item);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/upload", true);
+      progressBar.style.display = 'block';
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progressFill.style.width = `${percent}%`;
+          progressFill.textContent = `${percent}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          location.reload();
+        } else {
+          alert("Upload fallito");
+        }
+      };
+
+      xhr.send(formData);
+    });
+  }
+});
+</script>
+</body>
+</html>
+
+  <!-- 📒 Excel -->
+  <h4 class="mt-5">📒 File Excel disponibili</h4>
+  <ul class="list-group" id="excelList">
+    {% for excel in excels %}
+    <li class="list-group-item file-entry" data-name="{{ excel.path.split('/')[-1] }}" data-date="{{ excel.path|length }}">
+      <strong>{{ excel.path.split('/')[-1] }}</strong>
+      <div class="text-muted small">{{ excel.path }}</div>
+      <div class="d-flex gap-2 mt-1">
+        <a href="/download/{{ excel.path }}" target="_blank" class="btn btn-sm btn-outline-primary">📥 Scarica</a>
+        <a href="/preview-excel/{{ excel.path }}" target="_blank" class="btn btn-sm btn-outline-info">🔍 Anteprima</a>
+        <button class="btn btn-sm btn-outline-danger" data-path="{{ excel.path }}">🗑 Elimina</button>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <!-- 📊 Export -->
+  <div class="mt-5">
+    <h4>📊 Esporta Log Globale</h4>
+    <a href="/download-global-excel" class="btn btn-success">📤 Scarica Excel Globale</a>
+  </div>
+
+</div>
+
+<!-- 🔒 Modale conferma eliminazione -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Conferma Eliminazione</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+      </div>
+      <div class="modal-body">
+        Vuoi davvero eliminare il file?
+        <p id="deleteFileName" class="text-muted small mt-2"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Elimina</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+<script>
+let deletePath = "";
+
+// Attiva pulsante elimina
+
+document.querySelectorAll(".delete-btn").forEach(btn => {
+  btn.addEventListener("click", function () {
+    deletePath = this.dataset.path;
+    document.getElementById("deleteFileName").innerText = deletePath;
+    new bootstrap.Modal(document.getElementById("confirmDeleteModal")).show();
+  });
+});
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+  fetch(`/delete-file/${encodeURIComponent(deletePath)}`, { method: "DELETE" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success") {
+        location.reload();
+      } else {
+        alert("❌ Errore: " + data.message);
+      }
+    });
+});
+
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+
+const detailsModal = document.getElementById('detailsModal');
+detailsModal.addEventListener('show.bs.modal', function (event) {
+  const button = event.relatedTarget;
+  document.getElementById('modalName').innerText = button.getAttribute('data-name');
+  document.getElementById('modalDate').innerText = button.getAttribute('data-date');
+  document.getElementById('modalSize').innerText = button.getAttribute('data-size');
+});
+
+function showSuccessToast(message = "✅ Operazione completata con successo!") {
+  document.querySelector('#successToast .toast-body').innerText = message;
+  const toast = new bootstrap.Toast(document.getElementById('successToast'));
+  toast.show();
+}
+// 🔎 Filtro per tipo file
+document.getElementById("filterSelect").addEventListener("change", function () {
+  const type = this.value;
+  document.querySelectorAll(".file-entry").forEach(el => {
+    const elType = el.getAttribute("data-type");
+    el.style.display = (type === "all" || type === elType) ? "block" : "none";
+  });
+});
+// 🕓 Ordinamento
+document.getElementById("sortSelect").addEventListener("change", function () {
+  const mode = this.value;
+  const container = document.getElementById("imageList");
+  const entries = Array.from(container.querySelectorAll(".file-entry"));
+
+  entries.sort((a, b) => {
+    const aVal = a.getAttribute("data-name").toLowerCase();
+    const bVal = b.getAttribute("data-name").toLowerCase();
+
+    if (mode === "name") {
+      return aVal.localeCompare(bVal);
+    } else if (mode === "date") {
+      const aDate = new Date(a.getAttribute("data-bs-original-title").split(" | ")[0]);
+      const bDate = new Date(b.getAttribute("data-bs-original-title").split(" | ")[0]);
+      return bDate - aDate;
+    }
+  });
+
+  entries.forEach(e => container.appendChild(e));
+});
+
+// 🎬 Riproduzione video in modale
+const videoButtons = document.querySelectorAll(".play-video-btn");
+videoButtons.forEach(btn => {
+  btn.addEventListener("click", function () {
+    const videoSrc = this.getAttribute("data-path");
+    const player = document.getElementById("modalVideoPlayer");
+    player.querySelector("source").setAttribute("src", videoSrc);
+    player.load();
+    player.play();
+  });
+});
+
+document.getElementById("videoModal").addEventListener("hidden.bs.modal", () => {
+  const player = document.getElementById("modalVideoPlayer");
+  player.pause();
+  player.currentTime = 0;
+});
+// 🔍 Ricerca istantanea
+document.getElementById("searchInput").addEventListener("input", function () {
+  const term = this.value.toLowerCase();
+  document.querySelectorAll(".file-entry").forEach(el => {
+    const name = el.getAttribute("data-name").toLowerCase();
+    el.style.display = name.includes(term) ? "block" : "none";
+  });
+});
+
+</script>
+</body>
+</html>
