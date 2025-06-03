@@ -1,0 +1,18 @@
+2025-05-29T15:01:47.897698 | 02 = As build |  | v224 | matr.232 | 234234 | 20250529_150147_foto.jpg
+2025-05-29T15:02:28.885123 | 02 = As build |  | v224 | matr.555 | ewe | 20250529_150228_foto.jpg
+2025-05-29T15:02:35.627397 | 02 = As build |  | v224 | matr.555 | ewe | 20250529_150235_foto.jpg
+2025-05-29T15:02:52.596361 | 02 = As build |  | v224 | matr.555 | ewe | 20250529_150252_foto.jpg
+2025-05-29T15:03:16.973666 | 02 = As build |  | v224 | matr.555 | ewe | 20250529_150316_foto.jpg
+2025-05-29T15:03:21.329948 | 02 = As build |  | v224 | matr.555 | ewe | 20250529_150321_foto.jpg
+2025-05-30T12:04:32.258215 | rtry |  | rytr | tyty | tytry | 20250530_120432_256629_logCattura.PNG
+2025-05-30T13:55:19.811385 | 01 = Produzione | FILM | v3434 | 34 | 344 | 20250530_135519_808522_logCattura.PNG
+2025-05-30T14:27:41.671164 | 05 = Funzionamento | PET | v3434 | 34 | 344 | 20250530_142741_658095_Cfoto.PNG
+2025-05-30T14:27:44.546609 | 05 = Funzionamento | PET | v3434 | 34 | 344 | 20250530_142744_528459_Cfoto.PNG
+2025-05-30T14:44:14.442894 | 02 = As build | FILM | dvdsv | dv | dvdv | 20250530_144414_423485_Cfoto_-_Copia.PNG
+2025-05-30T14:54:02.587074 | 01 = Produzione | FILM | dvdsv | dv | dvdv | 20250530_145402_584794_rpas.PNG
+2025-05-30T14:54:37.018014 | 03 = Spedizione | FILM | dvdsv | dv | dvdv | 20250530_145437_016155_logCattura.PNG
+2025-05-30T16:23:51.424033 | 00 = Rilievi | FILM | vfdf | df | df | 20250530_162351_421289_logCattura.PNG
+2025-05-30T16:23:51.608666 | 00 = Rilievi | FILM | vfdf | df | df | 20250530_162351_607117_Cadddttura.PNG
+2025-05-30T16:23:51.681570 | 00 = Rilievi | FILM | vfdf | df | df | 20250530_162351_676753_Cfoto_-_Copia.PNG
+2025-06-03T11:00:33.100091 | 05 = Funzionamento | FILM | vfdf | df | df | 20250603_110033_098557_Cadddttura.PNG
+2025-06-03T11:02:54.379915 | 03 = Spedizione | FILM | v566 | matr.546 | 435 | 20250603_110254_362253_Cfoto_-_Copia.PNG
