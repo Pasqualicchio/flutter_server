@@ -21,6 +21,16 @@
   <p>Ciao, <strong>{{ user.username }}</strong> 👋</p>
 {% endif %}
 
+<!-- 📷 Acquisizione immagini -->
+<div class="mb-4 d-flex gap-2">
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden multiple>
+  <button class="btn btn-outline-primary" onclick="document.getElementById('cameraInput').click()">📷 Scatta o scegli foto</button>
+  <button class="btn btn-success d-none" id="confirmUploadBtn">✅ Carica immagini</button>
+</div>
+
+<!-- 🔍 Anteprima immagini -->
+<div id="galleryPreview" class="d-flex flex-wrap gap-2 mb-3"></div>
+
 
   <!-- ✅ TOAST SUCCESSO -->
   <div id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -40,6 +50,8 @@
   <a href="/logout" class="btn btn-outline-danger">🚪 Logout</a>
 </div>
 
+<!-- Anteprima immagini scelte prima dell’invio -->
+<div id="galleryPreview" class="mb-3 d-flex flex-wrap gap-2"></div>
 
   <form id="uploadForm">
     <div class="mb-3">
@@ -57,6 +69,7 @@
       </select>
     </div>
 
+    
     <div class="mb-3" id="lineaGroup" style="display: none;">
       <label class="form-label">Linea</label>
       <select class="form-select" name="linea" id="lineaSelect">
@@ -145,5 +158,70 @@
       new bootstrap.Toast(toast).show();
     }
   </script>
+
+  <script>
+let selectedFiles = [];
+
+const cameraInput = document.getElementById("cameraInput");
+const preview = document.getElementById("galleryPreview");
+const confirmBtn = document.getElementById("confirmUploadBtn");
+
+// Selezione da camera o galleria
+cameraInput.addEventListener("change", () => {
+  selectedFiles = Array.from(cameraInput.files);
+  preview.innerHTML = "";
+  confirmBtn.classList.toggle("d-none", selectedFiles.length === 0);
+
+  selectedFiles.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.style.maxHeight = "100px";
+      img.style.border = "1px solid #ccc";
+      img.style.borderRadius = "6px";
+      img.style.marginRight = "8px";
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+// Caricamento al click
+confirmBtn.addEventListener("click", () => {
+  const linea = document.getElementById("lineaInput").value.trim();
+  const commessa = document.getElementById("commessaInput").value.trim();
+  const matricola = document.getElementById("matricolaInput").value.trim();
+  const item = document.getElementById("itemInput").value.trim();
+
+  if (!linea || !commessa || !matricola || !item) {
+    alert("⚠️ Compila tutti i campi");
+    return;
+  }
+
+  selectedFiles.forEach((file, index) => {
+    const ext = file.name.split(".").pop();
+    const filename = `${linea}_${commessa}_${matricola}_${item}${selectedFiles.length > 1 ? `_n${index + 1}` : ""}.${ext}`;
+    const formData = new FormData();
+    formData.append("file", file, filename);
+    formData.append("linea", linea);
+    formData.append("commessa", commessa);
+    formData.append("matricola", matricola);
+    formData.append("item", item);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/upload", true);
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        location.reload();
+      } else {
+        alert("❌ Upload fallito");
+      }
+    };
+    xhr.send(formData);
+  });
+});
+</script>
+
 </body>
 </html>
