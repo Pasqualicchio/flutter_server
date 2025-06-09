@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
-import os
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -10,7 +10,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(255), nullable=False)  # hash lungo
 
 # CREA DB SE NON ESISTE
 with app.app_context():
@@ -26,8 +26,8 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
             return "✅ Login riuscito!"
         else:
             return "❌ Credenziali errate", 401
@@ -47,7 +47,8 @@ def register():
         if User.query.filter_by(username=username).first():
             return "❌ Username già registrato", 400
 
-        new_user = User(username=username, password=password)
+        hashed_pw = generate_password_hash(password)
+        new_user = User(username=username, password=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
 
