@@ -103,15 +103,38 @@ def upload_advanced_ui():
 
     return render_template('upload_advanced_ui.html', user=user)
 
-# BROWSE
-@app.route('/browse')
-def browse():
+@app.route('/upload-ui', methods=['GET', 'POST'])
+def upload_simple_ui():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
     user = User.query.get(session['user_id'])
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        # Gestione dell'upload semplice
+        return jsonify({"status": "success", "message": "File ricevuto da upload semplice!"})
+
+    return render_template('upload.html', user=user)
+
+# BROWSE
+@app.route('/browse')
+def browse():
     files = get_all_files()
-    return render_template('browse.html', images=files, user=user)
+
+    page = int(request.args.get('page', 1))
+    per_page = 12
+    total_pages = (len(files) + per_page - 1) // per_page
+
+    start = (page - 1) * per_page
+    end = start + per_page
+
+    paginated_files = files[start:end]
+
+    return render_template('browse.html', images=paginated_files, page=page, total_pages=total_pages)
+
 
 # LOGOUT
 @app.route('/logout')
