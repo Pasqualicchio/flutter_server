@@ -67,13 +67,24 @@ def upload_advanced_ui():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    user = User.query.get(session['user_id'])  # 👈 Ottieni l'utente loggato
+    user = User.query.get(session['user_id'])
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # logica upload se vuoi
         return jsonify({"status": "success", "message": "File ricevuto!"})
 
-    return render_template('upload_advanced_ui.html', user=user)  # 👈 Passa user al template
+    return render_template('upload_advanced_ui.html', user=user)
+
+@app.route('/browse')
+def browse():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    # logica per raccogliere i file
+    files = []  # sostituisci con la lista reale
+    return render_template('browse.html', images=files)
 
 # LOGOUT
 @app.route('/logout')
