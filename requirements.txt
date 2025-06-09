@@ -1,6 +1,7 @@
 Flask==2.3.3
 Flask-Mail==0.9.1
-pandas==2.2.2
 openpyxl==3.1.2
 Werkzeug==2.3.7
+Flask-SQLAlchemy==3.1.1
 gunicorn
+# pandas==2.2.2  ← rimosso o commentato perché causa problemi di build
