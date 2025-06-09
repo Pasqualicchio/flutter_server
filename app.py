@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Protezione sessione
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # (opzionale ma consigliato)
+
 db = SQLAlchemy(app)
 
 # MODELLO UTENTE
@@ -16,6 +19,7 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
+# HOME -> mostra pulsanti per login e registrazione
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -28,12 +32,15 @@ def login():
 
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
-            return "✅ Login riuscito!"
+            session['user_id'] = user.id
+            return redirect(url_for('upload_advanced_ui'))  # ✅ Reindirizza dopo login
         else:
             return "❌ Credenziali errate", 401
 
     return render_template('login.html')
 
+
+# REGISTER
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -53,3 +60,23 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html')
+
+# UPLOAD UI + gestione richiesta POST
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_advanced_ui():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.get(session['user_id'])  # 👈 Ottieni l'utente loggato
+
+    if request.method == 'POST':
+        # logica upload se vuoi
+        return jsonify({"status": "success", "message": "File ricevuto!"})
+
+    return render_template('upload_advanced_ui.html', user=user)  # 👈 Passa user al template
+
+# LOGOUT
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
