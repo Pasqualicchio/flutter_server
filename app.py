@@ -20,3 +20,20 @@ def login():
 
     # Metodo GET → mostra il form HTML
     return render_template('login.html')
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+
+        if password != confirm:
+            return "❌ Le password non coincidono", 400
+
+        # Qui puoi salvare l'utente in un database o file
+        # Esempio base (solo stampa):
+        print(f"👤 Nuovo utente registrato: {username}")
+
+        return "✅ Registrazione completata!"
+
+    return render_template('register.html')
