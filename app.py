@@ -59,11 +59,12 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
-            return redirect(url_for('upload_advanced_ui'))
+            return redirect(url_for('upload_advanced_ui'))  # ⬅️ Questa è la riga importante
         else:
             return "❌ Credenziali errate", 401
 
     return render_template('login.html')
+
 
 # REGISTRAZIONE
 @app.route('/register', methods=['GET', 'POST'])
@@ -98,10 +99,24 @@ def upload_advanced_ui():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # Puoi gestire l'upload dei file qui
-        return jsonify({"status": "success", "message": "File ricevuto!"})
+        if 'file' not in request.files:
+            return jsonify({"status": "error", "message": "Nessun file nel form"}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "Nome file mancante"}), 400
+
+        # Creazione cartella se non esiste
+        upload_folder = "uploads"
+        os.makedirs(upload_folder, exist_ok=True)
+
+        save_path = os.path.join(upload_folder, file.filename)
+        file.save(save_path)
+
+        return jsonify({"status": "success", "message": f"File {file.filename} salvato!"})
 
     return render_template('upload_advanced_ui.html', user=user)
+
 
 @app.route('/upload-ui', methods=['GET', 'POST'])
 def upload_simple_ui():
