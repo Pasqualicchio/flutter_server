@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
-import time
+from werkzeug.utils import secure_filename
+import os, time
 from openpyxl import Workbook
 
 app = Flask(__name__)
@@ -21,7 +21,7 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
-# 🔽 FUNZIONE PER RECUPERARE FILE ORDINATI
+# 🔽 FUNZIONE: Recupera file nella cartella 'uploads', ordinati per data
 def get_all_files():
     folder = "uploads/"
     files = []
@@ -34,11 +34,19 @@ def get_all_files():
         if os.path.isfile(path):
             created = os.path.getmtime(path)
             ext = fname.lower()
-            ftype = 'image' if ext.endswith(('.png', '.jpg', '.jpeg', '.gif')) else (
-                    'video' if ext.endswith(('.mp4', '.mov', '.avi')) else (
-                    'pdf' if ext.endswith('.pdf') else (
-                    'audio' if ext.endswith(('.mp3', '.wav')) else (
-                    'excel' if ext.endswith(('.xls', '.xlsx')) else 'other')))
+            if ext.endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                ftype = 'image'
+            elif ext.endswith(('.mp4', '.mov', '.avi')):
+                ftype = 'video'
+            elif ext.endswith('.pdf'):
+                ftype = 'pdf'
+            elif ext.endswith(('.mp3', '.wav')):
+                ftype = 'audio'
+            elif ext.endswith(('.xls', '.xlsx')):
+                ftype = 'excel'
+            else:
+                ftype = 'other'
+
             files.append({
                 'path': fname,
                 'type': ftype,
@@ -60,14 +68,11 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             return redirect(url_for('upload_advanced_ui'))
-        else:
-            return "❌ Credenziali errate", 401
-
+        return "❌ Credenziali errate", 401
     return render_template('login.html')
 
 # REGISTRAZIONE
@@ -77,21 +82,18 @@ def register():
         username = request.form['username']
         password = request.form['password']
         confirm = request.form['confirm_password']
-
         if password != confirm:
             return "❌ Le password non coincidono", 400
         if User.query.filter_by(username=username).first():
             return "❌ Username già registrato", 400
-
         hashed_pw = generate_password_hash(password)
         new_user = User(username=username, password=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
-
     return render_template('register.html')
 
-# ✅ ROUTE UNICA: UPLOAD (GET + POST)
+# UPLOAD (GET + POST)
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_advanced_ui():
     if 'user_id' not in session:
@@ -107,12 +109,11 @@ def upload_advanced_ui():
         commessa = request.form.get('commessa')
         matricola = request.form.get('matricola')
         item = request.form.get('item')
-
         if not all([macro, commessa, matricola, item]):
             return jsonify({"status": "error", "message": "Compila tutti i campi"}), 400
 
         files = request.files.getlist('images[]')
-        if not files or files == [None] or files == []:
+        if not files or files == [None] or all(f.filename == '' for f in files):
             single = request.files.get('file')
             if single and single.filename:
                 files = [single]
@@ -127,7 +128,8 @@ def upload_advanced_ui():
         for i, file in enumerate(files, start=1):
             if file and file.filename:
                 ext = file.filename.rsplit('.', 1)[-1]
-                filename = f"{macro}_{commessa}_{matricola}_{item}_n{i}.{ext}"
+                name = f"{macro}_{commessa}_{matricola}_{item}_n{i}.{ext}"
+                filename = secure_filename(name)
                 path = os.path.join(upload_folder, filename)
                 file.save(path)
                 salvati.append(filename)
@@ -157,7 +159,7 @@ def browse():
 
     return render_template('browse.html', images=paginated_files, excels=excels, page=page, total_pages=total_pages)
 
-# 🔽 DOWNLOAD GLOBALE LOG EXCEL
+# DOWNLOAD GLOBALE EXCEL
 @app.route('/download-global-excel')
 def download_global_excel():
     wb = Workbook()
@@ -166,25 +168,32 @@ def download_global_excel():
     ws.append(["Filename", "Tipo", "Data creazione", "Dimensione (KB)"])
 
     for f in get_all_files():
-        ws.append([f['path'], f['type'], time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(f['created'])), f['size_kb']])
+        ws.append([
+            f['path'],
+            f['type'],
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(f['created'])),
+            f['size_kb']
+        ])
 
-    output_path = "exports/global_log.xlsx"
     os.makedirs("exports", exist_ok=True)
+    output_path = "exports/global_log.xlsx"
     wb.save(output_path)
 
     return send_file(output_path, as_attachment=True)
-    
-  #  la route per scaricare il file Excel in app.py
 
-@app.route('/download-global-excel')
-def download_global_excel():
-    excel_path = "global_log.xlsx"
-    if os.path.exists(excel_path):
-        return send_file(excel_path, as_attachment=True)
-    else:
-        return "❌ File Excel non trovato", 404
+# DOWNLOAD FILE SINGOLO
+@app.route('/download/<path:filename>')
+def download_file(filename):
+    path = os.path.join("uploads", filename)
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True)
+    return "❌ File non trovato", 404
+
 # LOGOUT
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
