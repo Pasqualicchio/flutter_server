@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Protezione sessione
+app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -59,12 +59,11 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
-            return redirect(url_for('upload_advanced_ui'))  # ⬅️ Questa è la riga importante
+            return redirect(url_for('upload_advanced_ui'))
         else:
             return "❌ Credenziali errate", 401
 
     return render_template('login.html')
-
 
 # REGISTRAZIONE
 @app.route('/register', methods=['GET', 'POST'])
@@ -87,7 +86,8 @@ def register():
 
     return render_template('register.html')
 
-# UPLOAD avanzato
+# ✅ ROUTE UNICA: UPLOAD (GET + POST)
+# ✅ ROUTE UNICA: UPLOAD (GET + POST)
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_advanced_ui():
     if 'user_id' not in session:
@@ -99,61 +99,64 @@ def upload_advanced_ui():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        if 'file' not in request.files:
-            return jsonify({"status": "error", "message": "Nessun file nel form"}), 400
+        # ✅ Recupera dati dal form
+        macro = request.form.get('macro')
+        commessa = request.form.get('commessa')
+        matricola = request.form.get('matricola')
+        item = request.form.get('item')
 
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"status": "error", "message": "Nome file mancante"}), 400
+        if not all([macro, commessa, matricola, item]):
+            return jsonify({"status": "error", "message": "Compila tutti i campi"}), 400
 
-        # Creazione cartella se non esiste
+        # ✅ Recupera file multipli o singolo
+        files = request.files.getlist('images[]')
+        if not files or files == [None] or files == []:
+            single = request.files.get('file')
+            if single and single.filename:
+                files = [single]
+
+        if not files or all(f.filename == '' for f in files):
+            return jsonify({"status": "error", "message": "Nessun file valido selezionato"}), 400
+
+        # ✅ Salvataggio file
         upload_folder = "uploads"
         os.makedirs(upload_folder, exist_ok=True)
 
-        save_path = os.path.join(upload_folder, file.filename)
-        file.save(save_path)
+        salvati = []
+        for i, file in enumerate(files, start=1):
+            if file and file.filename:
+                ext = file.filename.rsplit('.', 1)[-1]
+                filename = f"{macro}_{commessa}_{matricola}_{item}_n{i}.{ext}"
+                path = os.path.join(upload_folder, filename)
+                file.save(path)
+                salvati.append(filename)
 
-        return jsonify({"status": "success", "message": f"File {file.filename} salvato!"})
+        return jsonify({
+            "status": "success",
+            "message": f"{len(salvati)} file caricati con successo!",
+            "files": salvati
+        })
 
+    # Metodo GET: mostra pagina upload
     return render_template('upload_advanced_ui.html', user=user)
 
-
-@app.route('/upload-ui', methods=['GET', 'POST'])
-def upload_simple_ui():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    user = User.query.get(session['user_id'])
-    if not user:
-        session.clear()
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        # Gestione dell'upload semplice
-        return jsonify({"status": "success", "message": "File ricevuto da upload semplice!"})
-
-    return render_template('upload.html', user=user)
 
 # BROWSE
 @app.route('/browse')
 def browse():
     files = get_all_files()
-
     page = int(request.args.get('page', 1))
     per_page = 12
     total_pages = (len(files) + per_page - 1) // per_page
 
     start = (page - 1) * per_page
     end = start + per_page
-
     paginated_files = files[start:end]
 
     return render_template('browse.html', images=paginated_files, page=page, total_pages=total_pages)
-
 
 # LOGOUT
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
-

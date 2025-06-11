@@ -2,11 +2,16 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>📤 Upload Avanzato</title>
+  <title>📄 Upload Avanzato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .preview-img { max-height: 150px; margin: 10px 0; display: block; }
+    .preview-img, .img-preview {
+      max-height: 100px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin: 5px;
+    }
     #toastSuccess {
       position: fixed;
       top: 20px;
@@ -16,47 +21,40 @@
   </style>
 </head>
 <body class="container py-4">
-  <h2 class="mb-4">📤 Upload Avanzato con Anteprima</h2>
-{% if user %}
-  <p>Ciao, <strong>{{ user.username }}</strong> 👋</p>
-{% endif %}
+  <h2 class="mb-4">📄 Upload Avanzato con Anteprima</h2>
+  {% if user %}
+    <p>Ciao, <strong>{{ user.username }}</strong> 👋</p>
+  {% endif %}
 
-<!-- 📷 Acquisizione immagini -->
-<div class="mb-4 d-flex gap-2">
-  <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden multiple>
-  <button class="btn btn-outline-primary" onclick="document.getElementById('cameraInput').click()">📷 Scatta o scegli foto</button>
-  <button class="btn btn-success d-none" id="confirmUploadBtn">✅ Carica immagini</button>
-</div>
+  <!-- 📷 Fotocamera -->
+  <div class="mb-4 d-flex gap-2">
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden multiple>
+    <button class="btn btn-outline-primary" onclick="cameraInput.click()">📷 Scatta o scegli foto</button>
+    <button class="btn btn-success d-none" id="confirmUploadBtn">✅ Carica immagini scelte</button>
+  </div>
+  <div id="galleryPreview" class="d-flex flex-wrap mb-3"></div>
 
-<!-- 🔍 Anteprima immagini -->
-<div id="galleryPreview" class="d-flex flex-wrap gap-2 mb-3"></div>
-
-
-  <!-- ✅ TOAST SUCCESSO -->
+  <!-- ✅ Toast Successo -->
   <div id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
-      <div class="toast-body">
-        ✅ File caricato con successo!
-      </div>
+      <div class="toast-body">✅ File caricato con successo!</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Chiudi"></button>
     </div>
   </div>
 
-  <!-- Pulsante per tornare alla pagina iniziale -->
-  <!-- Pulsanti: Torna indietro + Logout -->
-<div class="mb-3 d-flex gap-2">
-  <a href="/" class="btn btn-secondary">🔙 Torna alla pagina iniziale</a>
-  <a href="/browse" class="btn btn-info">🖼️ Galleria File</a>
-  <a href="/logout" class="btn btn-outline-danger">🚪 Logout</a>
-</div>
+  <!-- 🔙 Navigazione -->
+  <div class="mb-3 d-flex gap-2">
+    <a href="/" class="btn btn-secondary">🔙 Home</a>
+    <a href="/browse" class="btn btn-info">🖼️ Galleria</a>
+    <a href="/logout" class="btn btn-outline-danger">🚪 Logout</a>
+  </div>
 
-<!-- Anteprima immagini scelte prima dell’invio -->
-<div id="galleryPreview" class="mb-3 d-flex flex-wrap gap-2"></div>
-
+  <!-- 📝 Form Upload -->
   <form id="uploadForm">
     <div class="mb-3">
       <label class="form-label">Macro Categoria</label>
       <select class="form-select" name="macro" id="macroSelect" required>
+        <option value="">-- Seleziona --</option>
         <option>00 = Rilievi</option>
         <option>01 = Produzione</option>
         <option>02 = As build</option>
@@ -69,10 +67,10 @@
       </select>
     </div>
 
-    
     <div class="mb-3" id="lineaGroup" style="display: none;">
       <label class="form-label">Linea</label>
       <select class="form-select" name="linea" id="lineaSelect">
+        <option value="">-- Seleziona --</option>
         <option>FILM</option>
         <option>PET</option>
       </select>
@@ -80,148 +78,134 @@
 
     <div class="mb-3">
       <label class="form-label">Commessa</label>
-      <input class="form-control" name="commessa" required>
+      <input class="form-control" name="commessa" id="commessaInput" required>
     </div>
     <div class="mb-3">
       <label class="form-label">Matricola</label>
-      <input class="form-control" name="matricola" required>
+      <input class="form-control" name="matricola" id="matricolaInput" required>
     </div>
     <div class="mb-3">
       <label class="form-label">Item</label>
-      <input class="form-control" name="item" required>
+      <input class="form-control" name="item" id="itemInput" required>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Immagine</label>
-      <input type="file" class="form-control" accept="image/*" name="image" id="imageInput" multiple required>
-      <div id="preview"></div>
+      <label class="form-label">Immagini</label>
+      <input type="file" class="form-control" accept="image/*" name="images[]" id="imageInput" multiple required>
+      <div id="preview" class="d-flex flex-wrap mt-2"></div>
     </div>
-    <button type="submit" class="btn btn-success">📤 Carica Immagine</button>
+
+    <button type="submit" class="btn btn-success">📤 Carica Immagini</button>
   </form>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     const form = document.getElementById("uploadForm");
+    const imageInput = document.getElementById("imageInput");
+    const cameraInput = document.getElementById("cameraInput");
+    const preview = document.getElementById("preview");
+    const galleryPreview = document.getElementById("galleryPreview");
+    const confirmBtn = document.getElementById("confirmUploadBtn");
 
-    // ✅ Mostra campo "linea" se categoria è "05 = Funzionamento"
     document.getElementById("macroSelect").addEventListener("change", function () {
       document.getElementById("lineaGroup").style.display =
         this.value.includes("05 = Funzionamento") ? "block" : "none";
     });
 
-    // ✅ Anteprima immagini multiple
-    document.getElementById("imageInput").addEventListener("change", function () {
-      const preview = document.getElementById("preview");
+    imageInput.addEventListener("change", () => {
       preview.innerHTML = "";
-      Array.from(this.files).forEach(file => {
+      [...imageInput.files].forEach(file => {
         const reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = e => {
           const img = document.createElement("img");
           img.src = e.target.result;
-          img.className = "preview-img";
+          img.className = "img-preview";
           preview.appendChild(img);
         };
         reader.readAsDataURL(file);
       });
     });
 
-    // ✅ Upload via fetch (senza ricaricare)
-    form.addEventListener("submit", function (e) {
+    form.addEventListener("submit", e => {
       e.preventDefault();
-
       const formData = new FormData(form);
-      const file = document.getElementById("imageInput").files[0];
-      if (!file) return alert("⚠️ Nessun file selezionato");
+      uploadImages(formData, () => {
+        form.reset();
+        preview.innerHTML = "";
+      });
+    });
 
+    let selectedFiles = [];
+
+    cameraInput.addEventListener("change", () => {
+      selectedFiles = [...cameraInput.files];
+      galleryPreview.innerHTML = "";
+      confirmBtn.classList.toggle("d-none", selectedFiles.length === 0);
+      selectedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.className = "img-preview";
+          galleryPreview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    confirmBtn.addEventListener("click", () => {
+      const macro = document.getElementById("macroSelect").value;
+      const linea = document.getElementById("lineaSelect").value;
+      const commessa = document.getElementById("commessaInput").value.trim();
+      const matricola = document.getElementById("matricolaInput").value.trim();
+      const item = document.getElementById("itemInput").value.trim();
+
+      if (!macro || !commessa || !matricola || !item) {
+        alert("⚠️ Compila tutti i campi prima di caricare");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("macro", macro);
+      formData.append("linea", linea);
+      formData.append("commessa", commessa);
+      formData.append("matricola", matricola);
+      formData.append("item", item);
+
+      selectedFiles.forEach(file => {
+        formData.append("images[]", file);
+      });
+
+      uploadImages(formData, () => {
+        cameraInput.value = "";
+        galleryPreview.innerHTML = "";
+        confirmBtn.classList.add("d-none");
+      });
+    });
+
+    function uploadImages(formData, onSuccess) {
       fetch("/upload", {
         method: "POST",
         body: formData
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "success") {
-            showSuccessToast("✅ File caricato con successo!");
-            form.reset();
-            document.getElementById("preview").style.display = "none";
-          } else {
-            alert("❌ Errore: " + data.message);
-          }
-        })
-        .catch(err => alert("❌ Errore di rete: " + err));
-    });
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+          showSuccessToast("✅ Upload completato!");
+          if (onSuccess) onSuccess();
+        } else {
+          alert("❌ Errore: " + data.message);
+        }
+      })
+      .catch(() => alert("❌ Errore di rete durante il caricamento"));
+    }
 
-    // ✅ Mostra toast di successo
-    function showSuccessToast(message) {
+    function showSuccessToast(msg) {
       const toast = document.getElementById("toastSuccess");
-      toast.querySelector(".toast-body").innerText = message;
+      toast.querySelector(".toast-body").innerText = msg;
       new bootstrap.Toast(toast).show();
     }
   </script>
-
-  <script>
-let selectedFiles = [];
-
-const cameraInput = document.getElementById("cameraInput");
-const preview = document.getElementById("galleryPreview");
-const confirmBtn = document.getElementById("confirmUploadBtn");
-
-// Selezione da camera o galleria
-cameraInput.addEventListener("change", () => {
-  selectedFiles = Array.from(cameraInput.files);
-  preview.innerHTML = "";
-  confirmBtn.classList.toggle("d-none", selectedFiles.length === 0);
-
-  selectedFiles.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.style.maxHeight = "100px";
-      img.style.border = "1px solid #ccc";
-      img.style.borderRadius = "6px";
-      img.style.marginRight = "8px";
-      preview.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-});
-
-// Caricamento al click
-confirmBtn.addEventListener("click", () => {
-  const linea = document.getElementById("lineaInput").value.trim();
-  const commessa = document.getElementById("commessaInput").value.trim();
-  const matricola = document.getElementById("matricolaInput").value.trim();
-  const item = document.getElementById("itemInput").value.trim();
-
-  if (!linea || !commessa || !matricola || !item) {
-    alert("⚠️ Compila tutti i campi");
-    return;
-  }
-
-  selectedFiles.forEach((file, index) => {
-    const ext = file.name.split(".").pop();
-    const filename = `${linea}_${commessa}_${matricola}_${item}${selectedFiles.length > 1 ? `_n${index + 1}` : ""}.${ext}`;
-    const formData = new FormData();
-    formData.append("file", file, filename);
-    formData.append("linea", linea);
-    formData.append("commessa", commessa);
-    formData.append("matricola", matricola);
-    formData.append("item", item);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/upload", true);
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        location.reload();
-      } else {
-        alert("❌ Upload fallito");
-      }
-    };
-    xhr.send(formData);
-  });
-});
-</script>
-
 </body>
 </html>
