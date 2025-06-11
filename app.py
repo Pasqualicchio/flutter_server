@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import time
+from openpyxl import Workbook
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -33,7 +35,10 @@ def get_all_files():
             created = os.path.getmtime(path)
             ext = fname.lower()
             ftype = 'image' if ext.endswith(('.png', '.jpg', '.jpeg', '.gif')) else (
-                    'video' if ext.endswith(('.mp4', '.mov', '.avi')) else 'other')
+                    'video' if ext.endswith(('.mp4', '.mov', '.avi')) else (
+                    'pdf' if ext.endswith('.pdf') else (
+                    'audio' if ext.endswith(('.mp3', '.wav')) else (
+                    'excel' if ext.endswith(('.xls', '.xlsx')) else 'other')))
             files.append({
                 'path': fname,
                 'type': ftype,
@@ -87,7 +92,6 @@ def register():
     return render_template('register.html')
 
 # ✅ ROUTE UNICA: UPLOAD (GET + POST)
-# ✅ ROUTE UNICA: UPLOAD (GET + POST)
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_advanced_ui():
     if 'user_id' not in session:
@@ -99,7 +103,6 @@ def upload_advanced_ui():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # ✅ Recupera dati dal form
         macro = request.form.get('macro')
         commessa = request.form.get('commessa')
         matricola = request.form.get('matricola')
@@ -108,7 +111,6 @@ def upload_advanced_ui():
         if not all([macro, commessa, matricola, item]):
             return jsonify({"status": "error", "message": "Compila tutti i campi"}), 400
 
-        # ✅ Recupera file multipli o singolo
         files = request.files.getlist('images[]')
         if not files or files == [None] or files == []:
             single = request.files.get('file')
@@ -118,7 +120,6 @@ def upload_advanced_ui():
         if not files or all(f.filename == '' for f in files):
             return jsonify({"status": "error", "message": "Nessun file valido selezionato"}), 400
 
-        # ✅ Salvataggio file
         upload_folder = "uploads"
         os.makedirs(upload_folder, exist_ok=True)
 
@@ -137,24 +138,51 @@ def upload_advanced_ui():
             "files": salvati
         })
 
-    # Metodo GET: mostra pagina upload
     return render_template('upload_advanced_ui.html', user=user)
-
 
 # BROWSE
 @app.route('/browse')
 def browse():
     files = get_all_files()
+    images = [f for f in files if f['type'] in ['image', 'video']]
+    excels = [f for f in files if f['type'] == 'excel']
+
     page = int(request.args.get('page', 1))
     per_page = 12
-    total_pages = (len(files) + per_page - 1) // per_page
+    total_pages = (len(images) + per_page - 1) // per_page
 
     start = (page - 1) * per_page
     end = start + per_page
-    paginated_files = files[start:end]
+    paginated_files = images[start:end]
 
-    return render_template('browse.html', images=paginated_files, page=page, total_pages=total_pages)
+    return render_template('browse.html', images=paginated_files, excels=excels, page=page, total_pages=total_pages)
 
+# 🔽 DOWNLOAD GLOBALE LOG EXCEL
+@app.route('/download-global-excel')
+def download_global_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Log Files"
+    ws.append(["Filename", "Tipo", "Data creazione", "Dimensione (KB)"])
+
+    for f in get_all_files():
+        ws.append([f['path'], f['type'], time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(f['created'])), f['size_kb']])
+
+    output_path = "exports/global_log.xlsx"
+    os.makedirs("exports", exist_ok=True)
+    wb.save(output_path)
+
+    return send_file(output_path, as_attachment=True)
+    
+  #  la route per scaricare il file Excel in app.py
+
+@app.route('/download-global-excel')
+def download_global_excel():
+    excel_path = "global_log.xlsx"
+    if os.path.exists(excel_path):
+        return send_file(excel_path, as_attachment=True)
+    else:
+        return "❌ File Excel non trovato", 404
 # LOGOUT
 @app.route('/logout')
 def logout():
