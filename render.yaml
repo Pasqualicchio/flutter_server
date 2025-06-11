@@ -2,6 +2,7 @@ services:
   - type: web
     name: flutter-server
     runtime: python
+    python_version: "3.11"
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     region: frankfurt

@@ -368,24 +368,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <!-- 📒 Excel -->
 <h4 class="mt-5">📒 File Excel disponibili</h4>
+
+{% if last_modified_time %}
+  <p>Ultimo aggiornamento: {{ last_modified_time }}</p>
+{% endif %}
+
 <ul class="list-group" id="excelList">
   {% for excel in excels %}
-  <li class="list-group-item file-entry d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center" 
-      data-name="{{ excel.path.split('/')[-1] }}" 
-      data-type="excel"
-      data-date="{{ excel.created }}">
-    <div class="me-sm-3">
-      <strong>{{ excel.path.split('/')[-1] }}</strong>
-      <div class="text-muted small">📂 {{ excel.path }}</div>
-    </div>
-    <div class="d-flex gap-2 mt-2 mt-sm-0">
-      <a href="/download/{{ excel.path }}" target="_blank" class="btn btn-sm btn-outline-primary">📥 Scarica</a>
-      <a href="/preview-excel/{{ excel.path }}" target="_blank" class="btn btn-sm btn-outline-info">🔍 Anteprima</a>
-      <button class="btn btn-sm btn-outline-danger delete-btn" data-path="{{ excel.path }}">🗑 Elimina</button>
-    </div>
-  </li>
+    <li class="list-group-item file-entry d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center" 
+        data-name="{{ excel.path.split('/')[-1] }}" 
+        data-type="excel"
+        data-date="{{ excel.created }}">
+      <div class="me-sm-3">
+        <strong>{{ excel.path.split('/')[-1] }}</strong>
+        <div class="text-muted small">📂 {{ excel.path }}</div>
+      </div>
+      <div class="d-flex gap-2 mt-2 mt-sm-0">
+        <a href="/download/{{ excel.path }}" target="_blank" class="btn btn-sm btn-outline-primary">📥 Scarica</a>
+        <a href="/preview-excel/{{ excel.path }}" target="_blank" class="btn btn-sm btn-outline-info">🔍 Anteprima</a>
+        <button class="btn btn-sm btn-outline-danger delete-btn" data-path="{{ excel.path }}">🗑 Elimina</button>
+      </div>
+    </li>
   {% endfor %}
 </ul>
+
 
 <!-- 📊 Export -->
 <div class="mt-5">

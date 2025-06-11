@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from openpyxl.drawing.image import Image as ExcelImage
 from PIL import Image as PILImage
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 import os, time
+import datetime
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -60,6 +64,15 @@ def get_all_files():
 
     files.sort(key=lambda x: x['created'], reverse=True)
     return files
+
+# Funzione per ottenere la data dell'ultimo aggiornamento del file Excel
+def get_last_modified_time():
+    file_path = "exports/global_log.xlsx"
+    if os.path.exists(file_path):
+        timestamp = os.path.getmtime(file_path)
+        last_modified_time = datetime.datetime.fromtimestamp(timestamp)
+        return last_modified_time.strftime('%Y-%m-%d %H:%M:%S')
+    return None
 
 # HOME
 @app.route('/')
@@ -166,6 +179,9 @@ def browse():
     # Filtro per file Excel
     excels = [f for f in files if f['type'] == 'excel']
 
+    # Ottieni l'ultimo aggiornamento del file Excel
+    last_modified_time = get_last_modified_time()
+    
     # Recupera la pagina attuale, se non è presente si usa la pagina 1
     page = int(request.args.get('page', 1))
     
@@ -184,7 +200,13 @@ def browse():
     paginated_files = images[start:end]
 
     # Rendi la pagina con i file paginati
-    return render_template('browse.html', images=paginated_files, excels=excels, page=page, total_pages=total_pages)
+    return render_template('browse.html', 
+                           images=paginated_files, 
+                           excels=excels, 
+                           page=page, 
+                           total_pages=total_pages,
+                           last_modified_time=last_modified_time)  # Passa la data dell'ultimo aggiornamento
+
 
 
 # DOWNLOAD GLOBALE EXCEL
@@ -286,6 +308,46 @@ def download_file(filename):
     if os.path.exists(path):
         return send_file(path, as_attachment=True)
     return "❌ File non trovato", 404
+
+# aggiornare il file Excel
+def update_excel(image_path):
+    # Carica il file Excel esistente, se presente, altrimenti crea un nuovo file
+    if os.path.exists('global_log.xlsx'):
+        wb = load_workbook('global_log.xlsx')
+    else:
+        wb = Workbook()  # Se il file non esiste, ne creiamo uno nuovo
+
+    ws = wb.active
+    ws.title = "Log Completo"
+
+    # Estrai il nome del file
+    filename = os.path.basename(image_path)
+    parts = filename.rsplit("_", 4)  # Separiamo il nome del file in parti
+    macro = commessa = matricola = item = "N/D"  # Valori di default
+
+    # Verifica se il nome del file ha almeno 4 parti
+    if len(parts) >= 4:
+        macro = parts[0]
+        commessa = parts[1]
+        matricola = parts[2]
+        item_raw = parts[3]
+        item = item_raw.split("_n")[0]  # Estrarre l'item
+
+    # Aggiungi una riga con i dettagli
+    data_row = [
+        macro,
+        commessa,
+        matricola,
+        item,
+        filename,
+        'image',  # Tipo di file
+        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),  # Data
+        os.path.getsize(image_path) // 1024,  # Dimensione in KB
+        ""  # Placeholder per l'anteprima immagine
+    ]
+    ws.append(data_row)  # Aggiungi la riga con i dettagli dell'immagine
+    wb.save('global_log.xlsx')  # Salva il file Excel
+
 
 # LOGOUT
 @app.route('/logout')
