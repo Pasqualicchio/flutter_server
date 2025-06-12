@@ -3,3 +3,21 @@ Werkzeug<=2.3.6
 openpyxl==3.1.2
 Pillow==11.2.1
 watchdog==2.2.0
+gunicorn==23.0.0
+.config/ 
+.gitconfig 
+.idlerc/ 
+.node_repl_history 
+.python_history 
+.streamlit/ 
+.vscode/ 
+latex-app/ 
+my-app/ 
+node_modules/ 
+ntuser.dat.LOG1 
+ntuser.dat.LOG2 
+ntuser.ini offerta-interattiva/ 
+package-lock.json 
+package.json server/ 
+texpdf/ 
+venv/
