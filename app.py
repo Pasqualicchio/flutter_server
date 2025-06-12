@@ -9,6 +9,8 @@ from openpyxl.drawing.image import Image as ExcelImage
 from PIL import Image as PILImage
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from waitress import serve
+from app import app
 import os, time
 import datetime
 
@@ -355,5 +357,5 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    serve(app, host="0.0.0.0", port=5000)

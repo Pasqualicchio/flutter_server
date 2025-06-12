@@ -1,9 +1,8 @@
-services:
-  - type: web
-    name: flutter-server
-    runtime: python
-    python_version: "3.11"
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
-    region: frankfurt
-    plan: free
+dependencies:
+  flutter:
+    sdk: flutter
+  image_picker: ^0.8.5+3
+  http: ^0.14.0
+  http_parser: ^4.0.0
+  path_provider: ^2.0.11
+  connectivity_plus: ^2.3.0
