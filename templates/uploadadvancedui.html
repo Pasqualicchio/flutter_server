@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📄 Upload Avanzato</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f1f3f5; /* Soft light background */
+    }
+
+    .header-title {
+      font-weight: bold;
+      font-size: 1.8rem;
+      color: #2c3e50; /* Darker grey for the header text */
+    }
+
+    .upload-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Soft shadow for a more modern look */
+    }
+
+    /* Professional navigation buttons */
+    .btn-nav {
+      background-color: #95a1e6; /* Gray for more professional tone */
+      border: none;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 8px 15px;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+
+    .btn-nav:hover {
+      background-color: #5153e9; /* Slightly darker gray on hover */
+      transform: scale(1.05);
+    }
+
+    /* Camera button with professional muted orange */
+    .btn-camera {
+      background-color: #fd7e14; /* Muted orange */
+      border: none;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 8px 15px;
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .btn-camera:hover {
+      background-color: #e86c1f; /* Darker orange on hover */
+      transform: scale(1.05);
+    }
+
+    /* Video button with professional dark red */
+    .btn-video {
+      background-color: #dc3545; /* Red */
+      border: none;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 8px 15px;
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .btn-video:hover {
+      background-color: #c82333; /* Darker red on hover */
+      transform: scale(1.05);
+    }
+
+    .btn-nav, .btn-camera, .btn-video {
+      width: 100%;
+    }
+
+    .d-flex.justify-content-center {
+      margin-top: 10px;
+    }
+
+    @media (min-width: 576px) {
+      .btn-nav, .btn-camera, .btn-video {
+        width: auto; /* Reset to default width on larger screens */
+      }
+    }
+
+    /* Optional: Style for image previews */
+    #preview img {
+      max-width: 150px;
+      margin: 10px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body class="container py-4">
+  <h2 class="mb-4 text-center">📄 Upload Avanzato con Anteprima</h2>
+  
+  {% if user %}
+    <p class="text-center">Ciao, <strong>{{ user.username }}</strong> 👋</p>
+  {% endif %}
+
+  <!-- Card Container -->
+  <div class="card shadow-sm rounded-4 p-4 mb-4">
+    <h4 class="text-center mb-4">Gestisci Upload</h4>
+
+    <div class="card-body">
+      <!-- Advanced Upload Button -->
+      <div class="text-center mb-4">
+        <a href="{{ url_for('drop_and_drag_ui') }}" class="btn btn-info btn-sm w-100 py-2">
+          🚀 Caricamento Avanzato Drag & Drop
+        </a>
+      </div>
+
+      <!-- Camera & Video Input Section -->
+      <div class="d-flex gap-3 justify-content-center mb-4">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden multiple>
+        <input type="file" id="videoInput" accept="video/*" capture="environment" hidden multiple>
+        
+        <button class="btn btn-camera w-100" onclick="document.getElementById('cameraInput').click()">📸 Scatta foto</button>
+        <button class="btn btn-video w-100" onclick="document.getElementById('videoInput').click()">🎥 Registra Video</button>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+        <a href="/" class="btn btn-nav mb-2 mb-sm-0">🔙 Home</a>
+        <a href="{{ url_for('browse_ui') }}" class="btn btn-nav mb-2 mb-sm-0">✨ Galleria</a>
+        <a href="/logout" class="btn btn-nav mb-2 mb-sm-0">🚪 Logout</a>
+      </div>
+
+      <!-- Button for Upload Confirmation -->
+      <div class="text-center mt-4">
+        <button class="btn btn-success d-none" id="confirmUploadBtn">✅ Carica immagini scelte</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success and Error Toasts -->
+  <div id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">✅ File caricato con successo!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Chiudi"></button>
+    </div>
+  </div>
+  <div id="toastError" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+    <div class="d-flex">
+      <div class="toast-body">❌ Errore durante il caricamento!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Chiudi"></button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+<!-- 📝 Form Upload -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="card shadow rounded-4 p-4">
+          <h4 class="mb-4 text-center">📝 Form Upload</h4>
+          <form id="uploadForm">
+            <!-- Macro Categoria -->
+            <div class="mb-3">
+              <label class="form-label">Macro Categoria</label>
+              <select class="form-select" name="macro" id="macroSelect" required>
+                <option value="">-- Seleziona --</option>
+                        <option>00 = Rilievi</option>
+        <option>01 = Produzione</option>
+        <option>02 = As build</option>
+        <option>03 = Spedizione</option>
+        <option>04 = Montaggio</option>
+        <option>05 = Funzionamento</option>
+        <option>06 = Inconvenienti</option>
+        <option>07 = Magazzino</option>
+        <option>08 = Laboratorio</option>
+      </select>
+    
+
+    <div class="mb-3" id="lineaGroup" style="display: none;">
+      <label class="form-label">Linea</label>
+      <select class="form-select" name="linea" id="lineaSelect">
+        <option value="">-- Seleziona --</option>
+        <option>FILM</option>
+        <option>PET</option>
+      </select>
+    </div>
+
+    
+    </div>
+    <!-- Moduli per FILM (visibili solo se si seleziona "FILM") -->
+    <div class="mb-3" id="filmModule" style="display: none;">
+      <label class="form-label">Modulo FILM</label>
+      <select class="form-select" name="filmOptions" id="filmOptions">
+        <option value="">-- Seleziona --</option>
+        <option>PREWASHING</option>
+        <option>GRINDER</option>
+        <option>WATER</option>
+        <option>FILTRATION</option>
+        <option>WASHING + SEPARATION</option>
+        <option>DRY</option>
+        <option>ALTRI</option>
+      </select>
+    </div>
+
+    <!-- Moduli per PET (visibili solo se si seleziona "PET") -->
+    <div class="mb-3" id="petModule" style="display: none;">
+      <label class="form-label">Modulo PET</label>
+      <select class="form-select" name="petOptions" id="petOptions">
+        <option value="">-- Seleziona --</option>
+        <option>PREWASHING</option>
+        <option>GRINDER</option>
+        <option>WATER</option>
+        <option>FILTRATION</option>
+        <option>HOT WASHING</option>
+        <option>SEPARATION + RINSING</option>
+        <option>DRY</option>
+        <option>AERODYNAMIC SEPARATOR</option>
+        <option>SILO + BIG BAGS</option>
+        <option>ALTRI</option>
+      </select>
+    </div>
+
+    <!-- Commessa -->
+    <div class="mb-3">
+      <label for="commessaInput" class="form-label">Commessa</label>
+    <div class="input-group">
+      <span class="input-group-text">V</span>
+      <input type="text" class="form-control" name="commessa" id="commessaInput" required>
+    </div>
+    </div>
+
+<!-- Matricola -->
+<div class="mb-3">
+  <label for="matricolaInput" class="form-label">Matricola</label>
+  <div class="input-group">
+    <span class="input-group-text">Matr.</span>
+    <input type="text" class="form-control" name="matricola" id="matricolaInput" required>
+  </div>
+</div>
+
+<!-- Item -->
+<div class="mb-3">
+  <label for="itemInput" class="form-label">Item</label>
+  <div class="input-group">
+    <span class="input-group-text">IT</span>
+    <input type="text" class="form-control" name="item" id="itemInput" required>
+  </div>
+
+
+      
+
+  <!-- Contenitore per l'anteprima e la modifica dei nomi -->
+  <div id="filePreviewContainer" class="mt-3"></div>
+  </div>
+
+<!-- Bottone per caricare i file -->
+<button type="button" id="uploadBtn" class="btn btn-success mt-4 d-none">✅ Carica Immagini Selezionate</button>
+
+<!-- JS per gestire il caricamento, la visualizzazione e la modifica dei nomi -->
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const progressBar = document.getElementById('progressBar');
+  const filePreviewContainer = document.getElementById('filePreviewContainer');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const lineaSelect = document.getElementById("lineaSelect");
+  const filmModule = document.getElementById("filmModule");
+  const petModule = document.getElementById("petModule");
+
+  lineaSelect.addEventListener("change", function () {
+  if (this.value === "FILM") {
+    filmModule.style.display = "block";
+    petModule.style.display = "none";
+  } else if (this.value === "PET") {
+    petModule.style.display = "block";
+    filmModule.style.display = "none";
+  } else {
+    // Nasconde entrambi se non è FILM o PET
+    filmModule.style.display = "none";
+    petModule.style.display = "none";
+  }
+});
+
+  
+
+  // Gestire i file selezionati manualmente
+  fileInput.addEventListener('change', (event) => {
+    handleFiles(event.target.files);
+  });
+
+  // Funzione per gestire i file caricati
+  function handleFiles(files) {
+    filePreviewContainer.innerHTML = ''; // Pulisce l'anteprima precedente
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const fileContainer = document.createElement('div');
+        fileContainer.classList.add('d-flex', 'flex-column', 'align-items-center', 'mb-3');
+        
+        const img = document.createElement('img');
+        img.src = reader.result;
+        img.classList.add('thumb', 'mb-2');
+        fileContainer.appendChild(img);
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = file.name; // Imposta il nome del file nell'input
+        nameInput.classList.add('form-control', 'mb-2');
+        nameInput.addEventListener('input', () => {
+          file.name = nameInput.value;  // Aggiorna il nome del file in tempo reale
+        });
+
+        fileContainer.appendChild(nameInput);
+        filePreviewContainer.appendChild(fileContainer);
+      };
+
+      reader.readAsDataURL(file);  // Legge il file come URL di dati
+    });
+
+    // Mostra il pulsante di caricamento solo quando ci sono file da caricare
+    uploadBtn.classList.remove('d-none');
+  }
+
+  // Funzione per caricare i file selezionati
+  uploadBtn.addEventListener('click', () => {
+    const files = fileInput.files;
+    const formData = new FormData();
+
+    Array.from(files).forEach(file => {
+      formData.append('images[]', file, file.name);
+    });
+
+    // Aggiungi una logica per inviare i dati al server (qui un esempio di fetch)
+    fetch('/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert('Immagini caricate con successo!');
+        // Resetta il form dopo il successo
+        fileInput.value = '';
+        filePreviewContainer.innerHTML = '';
+        uploadBtn.classList.add('d-none');
+      } else {
+        alert('Errore durante il caricamento delle immagini');
+      }
+    })
+    .catch(error => {
+      alert('Errore di rete: ' + error.message);
+    });
+  });
+</script>
+
+
+
+<!-- 📄 Caricamento Immagini -->
+<div class="mb-3">
+  <label class="form-label">Immagini</label>
+  <input type="file" class="form-control" accept="image/*" name="image" id="imageInput" multiple required>
+  <div id="preview" class="d-flex flex-wrap mt-2"></div>
+</div>
+
+<!-- Custom Styles and Scripts -->
+<style>
+
+  /* Anteprima immagini */
+  #preview img {
+    max-width: 150px;
+    margin: 10px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+</style>
+
+<script>
+  // Seleziona la Dropzone e gli altri elementi
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+  const preview = document.getElementById("preview");
+  const progressBar = document.getElementById("progressBar");
+  const progressBarFill = progressBar.querySelector(".progress-bar");
+
+  // Gestire il trascinamento dei file
+  d
+  // Gestire i file selezionati manualmente o tramite drag-and-drop
+  fileInput.addEventListener("change", (e) => {
+    const files = e.target.files;
+    handleFiles(files);
+  });
+
+  // Funzione per caricare i file e mostrare l'anteprima
+  function handleFiles(files) {
+    preview.innerHTML = ""; // Pulisce l'anteprima
+    const fileArray = Array.from(files);
+    
+    // Mostra l'anteprima delle immagini
+    fileArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Mostra la barra di progresso e inizia il caricamento
+    progressBar.style.display = "block";
+    uploadFiles(fileArray);
+  }
+
+  // Funzione per caricare i file (simulazione del caricamento)
+  function uploadFiles(files) {
+    const totalFiles = files.length;
+    let uploadedFiles = 0;
+
+    files.forEach((file) => {
+      // Simula il caricamento del file con un timeout
+      setTimeout(() => {
+        uploadedFiles++;
+        const progress = (uploadedFiles / totalFiles) * 100;
+        progressBarFill.style.width = ${progress}%;
+        progressBarFill.setAttribute("aria-valuenow", progress);
+
+        if (uploadedFiles === totalFiles) {
+          setTimeout(() => {
+            alert("Caricamento completato!");
+            progressBar.style.display = "none";
+            progressBarFill.style.width = "0%"; // Reset della barra
+          }, 500);
+        }
+      }, Math.random() * 2000); // Ritardo random per simulare il caricamento
+    });
+  }
+</script>
+
+<!-- Bottone "Carica Immagini" con icona e effetti stilizzati -->
+<button type="submit" class="btn btn-upload">
+  <i class="bi bi-upload"></i> 📤 Carica Immagini
+</button>
+</form>
+
+<!-- Custom styles for buttons -->
+<style>
+  /* Bottone di upload - Colore arancione con effetto hover e ombra */
+  .btn-upload {
+    background-color: #7a7672; /* Arancione */
+    border-color: #7a7672;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(253, 126, 20, 0.2);
+    padding: 10px 20px;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-upload:hover {
+    background-color: #e86c1f; /* Arancione più scuro */
+    border-color: #d65a10;
+    transform: scale(1.05);
+  }
+
+  /* Aggiunta di icona e effetto hover */
+  .btn-upload i {
+    font-size: 1.2rem; /* Imposta la dimensione dell'icona */
+  }
+</style>
+
+<script>
+  // Gestire i file selezionati manualmente
+  fileInput.addEventListener('change', (event) => {
+    handleFiles(event.target.files);
+  });
+
+  // Funzione per gestire i file caricati (immagini)
+  function handleFiles(files) {
+    filePreviewContainer.innerHTML = ''; // Pulisce l'anteprima precedente
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const fileContainer = document.createElement('div');
+        fileContainer.classList.add('d-flex', 'flex-column', 'align-items-center', 'mb-3');
+        
+        const img = document.createElement('img');
+        img.src = reader.result;
+        img.classList.add('thumb', 'mb-2');
+        fileContainer.appendChild(img);
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = file.name; // Imposta il nome del file nell'input
+        nameInput.classList.add('form-control', 'mb-2');
+        nameInput.addEventListener('input', () => {
+          file.name = nameInput.value;  // Aggiorna il nome del file in tempo reale
+        });
+
+        fileContainer.appendChild(nameInput);
+        filePreviewContainer.appendChild(fileContainer);
+      };
+
+      reader.readAsDataURL(file);  // Legge il file come URL di dati
+    });
+
+    // Mostra il pulsante di caricamento solo quando ci sono file da caricare
+    uploadBtn.classList.remove('d-none');
+  }
+
+  // Gestire i file video
+  document.getElementById('videoInput').addEventListener('change', (event) => {
+    const files = event.target.files;
+    handleVideoFiles(files);
+  });
+
+  // Funzione per gestire i file video
+  function handleVideoFiles(files) {
+    filePreviewContainer.innerHTML = ''; // Pulisce l'anteprima precedente
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const fileContainer = document.createElement('div');
+        fileContainer.classList.add('d-flex', 'flex-column', 'align-items-center', 'mb-3');
+        
+        // Creare l'anteprima video
+        const video = document.createElement('video');
+        video.src = reader.result;
+        video.classList.add('thumb', 'mb-2');
+        video.controls = true; // Aggiungi controlli video
+        fileContainer.appendChild(video);
+
+        // Mostrare l'anteprima
+        filePreviewContainer.appendChild(fileContainer);
+      };
+
+      reader.readAsDataURL(file);  // Legge il file come URL di dati
+    });
+  }
+
+  // Funzione per caricare i file selezionati
+  uploadBtn.addEventListener('click', () => {
+    const files = fileInput.files;
+    const formData = new FormData();
+
+    Array.from(files).forEach(file => {
+      formData.append('images[]', file, file.name);
+    });
+
+    // Aggiungi una logica per inviare i dati al server (qui un esempio di fetch)
+    fetch('/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert('Immagini caricate con successo!');
+        // Resetta il form dopo il successo
+        fileInput.value = '';
+        filePreviewContainer.innerHTML = '';
+        uploadBtn.classList.add('d-none');
+      } else {
+        alert('Errore durante il caricamento delle immagini');
+      }
+    })
+    .catch(error => {
+      alert('Errore di rete: ' + error.message);
+    });
+  });
+</script>
+
+  
+  <div class="form-group">
+    <label for="note">Note (opzionale)</label>
+    <input type="text" class="form-control" name="note" id="note" placeholder="Inserisci una nota...">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  const form = document.getElementById("uploadForm");
+  const imageInput = document.getElementById("imageInput");
+  const cameraInput = document.getElementById("cameraInput");
+  const preview = document.getElementById("preview");
+  const galleryPreview = document.getElementById("galleryPreview");
+  const confirmBtn = document.getElementById("confirmUploadBtn");
+
+  document.getElementById("macroSelect").addEventListener("change", function () {
+    document.getElementById("lineaGroup").style.display =
+      this.value.includes("05 = Funzionamento") ? "block" : "none";
+  });
+
+  imageInput.addEventListener("change", () => {
+    preview.innerHTML = "";
+    [...imageInput.files].forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.className = "img-preview";
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    uploadImages(formData, () => {
+      form.reset();
+      preview.innerHTML = "";
+    });
+  });
+
+  let selectedFiles = [];
+
+  cameraInput.addEventListener("change", () => {
+    selectedFiles = [...cameraInput.files];
+    galleryPreview.innerHTML = "";
+    confirmBtn.classList.toggle("d-none", selectedFiles.length === 0);
+    selectedFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.className = "img-preview";
+        galleryPreview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  confirmBtn.addEventListener("click", () => {
+    const macro = document.getElementById("macroSelect").value;
+    const linea = document.getElementById("lineaSelect").value;
+    const commessa = document.getElementById("commessaInput").value.trim();
+    const matricola = document.getElementById("matricolaInput").value.trim();
+    const item = document.getElementById("itemInput").value.trim();
+
+    if (!macro || !commessa || !matricola || !item) {
+      alert("⚠️ Compila tutti i campi prima di caricare");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("macro", macro);
+    formData.append("linea", linea);
+    formData.append("commessa", commessa);
+    formData.append("matricola", matricola);
+    formData.append("item", item);
+
+    selectedFiles.forEach(file => {
+      // Genera un nome file personalizzato
+      const extension = file.name.split(".").pop();
+      const filename = `${macro}${linea ? "_" + linea : ""}_${commessa}_${matricola}_${item}.${extension}`;
+      formData.append("images[]", file, filename);
+    });
+
+    uploadImages(formData, () => {
+      cameraInput.value = "";
+      galleryPreview.innerHTML = "";
+      confirmBtn.classList.add("d-none");
+    });
+  });
+
+  function uploadImages(formData, onSuccess) {
+    fetch("/upload", {
+      method: "POST",
+      body: formData
+    })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('Errore durante il caricamento: ' + res.statusText);
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (data.status === "success") {
+        showSuccessToast("✅ Upload completato!");
+        if (onSuccess) onSuccess();
+      } else {
+        showErrorToast("❌ Errore: " + data.message);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      showErrorToast("❌ Errore di rete durante il caricamento");
+    });
+  }
+
+  function showSuccessToast(msg) {
+    const toast = document.getElementById("toastSuccess");
+    toast.querySelector(".toast-body").innerText = msg;
+    new bootstrap.Toast(toast).show();
+  }
+
+  function showErrorToast(msg) {
+    const toast = document.getElementById("toastError");
+    if (!toast) {
+      const errorToast = document.createElement('div');
+      errorToast.classList.add('toast', 'align-items-center', 'text-bg-danger', 'border-0');
+      errorToast.setAttribute('role', 'alert');
+      errorToast.setAttribute('aria-live', 'assertive');
+      errorToast.setAttribute('aria-atomic', 'true');
+      errorToast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${msg}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Chiudi"></button>
+        </div>
+      `;
+
+      document.body.appendChild(errorToast);
+      new bootstrap.Toast(errorToast).show();
+    } else {
+      toast.querySelector(".toast-body").innerText = msg;
+      new bootstrap.Toast(toast).show();
+    }
+  }
+</script>
+
+  
+
+
+
+        </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

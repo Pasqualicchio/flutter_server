@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Benvenuto</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Benvenuto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="container">
-    <h2>👋 Benvenuto su Flutter Server</h2>
-    <p>Scegli cosa vuoi fare:</p>
-    <a href="{{ url_for('login') }}"><button>🔐 Login</button></a>
-    <a href="{{ url_for('register') }}"><button>📝 Registrati</button></a>
-  </div>
+    <div class="container">
+        <h2>🍀 Benvenuto su Flutter Server!</h2>
+        <p>Scegli cosa vuoi fare:</p>
+        <a href="{{ url_for('login') }}">
+            <button>Login</button>
+        </a>
+        <a href="{{ url_for('new_register') }}">Register</a>
+            <button>Registrati</button>
+        </a>
+    </div>
 </body>
 </html>

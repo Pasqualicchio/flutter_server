@@ -22,6 +22,9 @@
       right: 20px;
       z-index: 1055;
     }
+    #alertArea {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body class="container">
@@ -35,37 +38,62 @@
     </div>
   </div>
 
-  <form id="uploadForm">
+  <!-- ✅ Form Upload -->
+  <form id="uploadForm" method="POST" enctype="multipart/form-data">
     <div class="row g-3">
+      <!-- Macro -->
       <div class="col-md-6">
-        <label class="form-label">Macro</label>
-        <input type="text" class="form-control" name="macro" required>
+        <label for="macroInput" class="form-label">Macro</label>
+        <input type="text" class="form-control" name="macro" id="macroInput" required>
       </div>
+
+      <!-- Commessa -->
       <div class="col-md-6">
-        <label class="form-label">Commessa</label>
-        <input type="text" class="form-control" name="commessa" required>
+        <label for="commessaInput" class="form-label">Commessa</label>
+        <div class="input-group">
+          <span class="input-group-text">V</span>
+          <input type="text" class="form-control" name="commessa" id="commessaInput" required>
+        </div>
       </div>
+
+      <!-- Matricola -->
       <div class="col-md-6">
-        <label class="form-label">Matricola</label>
-        <input type="text" class="form-control" name="matricola" required>
+        <label for="matricolaInput" class="form-label">Matricola</label>
+        <div class="input-group">
+          <span class="input-group-text">Matr.</span>
+          <input type="text" class="form-control" name="matricola" id="matricolaInput" required>
+        </div>
       </div>
+
+      <!-- Item -->
       <div class="col-md-6">
-        <label class="form-label">Item</label>
-        <input type="text" class="form-control" name="item" required>
+        <label for="itemInput" class="form-label">Item</label>
+        <div class="input-group">
+          <span class="input-group-text">IT</span>
+          <input type="text" class="form-control" name="item" id="itemInput" required>
+        </div>
       </div>
+
+      <!-- File immagine -->
       <div class="col-12">
-        <label class="form-label">Immagini</label>
-        <input type="file" class="form-control" accept="image/*" name="images[]" id="imageInput" multiple required>
+        <label for="imageInput" class="form-label">Seleziona Immagini</label>
+        <input type="file" class="form-control" name="image" id="imageInput" accept="image/*" multiple required>
         <div id="preview" class="d-flex flex-wrap mt-2"></div>
       </div>
-    </div>
 
-    <button type="submit" class="btn btn-success mt-4" id="submitBtn">📤 Carica Immagini</button>
+      <!-- Pulsante -->
+      <div class="col-12">
+        <button type="submit" class="btn btn-success mt-3" id="submitBtn">📤 Carica Immagini</button>
+      </div>
+    </div>
   </form>
 
-  <div id="alertArea" class="mt-4"></div>
+  <div id="alertArea"></div>
 
+  <!-- Include Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Script di gestione Upload -->
   <script>
     const form = document.getElementById("uploadForm");
     const imageInput = document.getElementById("imageInput");
@@ -73,6 +101,7 @@
     const alertArea = document.getElementById("alertArea");
     const submitBtn = document.getElementById("submitBtn");
 
+    // Preview delle immagini selezionate
     imageInput.addEventListener("change", () => {
       preview.innerHTML = "";
       Array.from(imageInput.files).forEach(file => {
@@ -87,6 +116,7 @@
       });
     });
 
+    // Submit del form per caricare le immagini
     form.addEventListener("submit", e => {
       e.preventDefault();
 
@@ -123,6 +153,7 @@
       });
     });
 
+    // Funzione per mostrare il toast di successo
     function showSuccessToast(message) {
       const toast = document.getElementById("toastSuccess");
       toast.querySelector(".toast-body").innerText = message;

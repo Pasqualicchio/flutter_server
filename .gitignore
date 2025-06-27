@@ -1,0 +1,9 @@
+# Ignora l'ambiente virtuale Python
+venv/
+.env/
+__pycache__/
+*.pyc
+
+# Altri file temporanei
+.DS_Store
+*.log
