@@ -1,11 +1,15 @@
 # Usa l'immagine ufficiale di Flutter come base
 FROM cirrusci/flutter:stable
 
+# Crea un utente non root
+RUN useradd -ms /bin/bash flutteruser
+USER flutteruser
+
 # Imposta la directory di lavoro dentro il container
-WORKDIR /app
+WORKDIR /home/flutteruser/app
 
 # Copia tutti i file del progetto Flutter nel container
-COPY . .
+COPY --chown=flutteruser . .
 
 # Installa le dipendenze di Flutter
 RUN flutter pub get
