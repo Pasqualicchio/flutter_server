@@ -17,8 +17,8 @@ RUN git config --global --add safe.directory /sdks/flutter
 # Impostiamo una directory di cache personalizzata
 ENV PUB_CACHE="/home/flutteruser/.pub-cache"
 
-# Impostiamo permessi per la cache di Flutter in caso di conflitti
-RUN chmod -R 777 /home/flutteruser/.pub-cache
+# Crea la directory .pub-cache e imposta i permessi
+RUN mkdir -p /home/flutteruser/.pub-cache && chmod -R 777 /home/flutteruser/.pub-cache
 
 # Installa le dipendenze di Flutter senza usare la cache predefinita
 RUN flutter pub get --no-cache
