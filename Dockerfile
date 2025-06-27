@@ -14,15 +14,16 @@ COPY --chown=flutteruser . .
 # Aggiungi l'eccezione per la directory di Flutter in Git
 RUN git config --global --add safe.directory /sdks/flutter
 
-# Imposta una directory di cache personalizzata
-ENV FLUTTER_STORAGE_BASE_URL="https://storage.googleapis.com"
-ENV FLUTTER_GIT_URL="https://github.com/flutter/flutter.git"
+# Impostiamo una directory di cache personalizzata (altro percorso nella home dell'utente)
 ENV PUB_CACHE="/home/flutteruser/.pub-cache"
 
-# Disabilita la cache predefinita di Flutter
+# Eseguiamo la configurazione di Flutter senza analytics
 RUN flutter config --no-analytics
 
-# Installa le dipendenze di Flutter
+# Impostiamo permessi per la cache di Flutter in caso di conflitti
+RUN chmod -R 777 /home/flutteruser/.pub-cache
+
+# Installa le dipendenze di Flutter senza usare la cache predefinita
 RUN flutter pub get --no-cache
 
 # Esegui la build del progetto per il web
