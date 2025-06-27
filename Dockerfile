@@ -19,8 +19,11 @@ ENV FLUTTER_STORAGE_BASE_URL="https://storage.googleapis.com"
 ENV FLUTTER_GIT_URL="https://github.com/flutter/flutter.git"
 ENV PUB_CACHE="/home/flutteruser/.pub-cache"
 
+# Disabilita la cache predefinita di Flutter
+RUN flutter config --no-analytics
+
 # Installa le dipendenze di Flutter
-RUN flutter pub get
+RUN flutter pub get --no-cache
 
 # Esegui la build del progetto per il web
 RUN flutter build web
