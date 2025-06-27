@@ -14,11 +14,8 @@ COPY --chown=flutteruser . .
 # Aggiungi l'eccezione per la directory di Flutter in Git
 RUN git config --global --add safe.directory /sdks/flutter
 
-# Impostiamo una directory di cache personalizzata (altro percorso nella home dell'utente)
+# Impostiamo una directory di cache personalizzata
 ENV PUB_CACHE="/home/flutteruser/.pub-cache"
-
-# Eseguiamo la configurazione di Flutter senza analytics
-RUN flutter config --no-analytics
 
 # Impostiamo permessi per la cache di Flutter in caso di conflitti
 RUN chmod -R 777 /home/flutteruser/.pub-cache
