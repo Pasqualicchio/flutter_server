@@ -14,9 +14,6 @@ COPY --chown=flutteruser . .
 # Aggiungi l'eccezione per la directory di Flutter in Git
 RUN git config --global --add safe.directory /sdks/flutter
 
-# Correggi i permessi nella directory di Flutter
-RUN sudo chown -R flutteruser: /sdks/flutter
-
 # Installa le dipendenze di Flutter
 RUN flutter pub get
 
