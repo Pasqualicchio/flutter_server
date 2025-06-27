@@ -14,6 +14,11 @@ COPY --chown=flutteruser . .
 # Aggiungi l'eccezione per la directory di Flutter in Git
 RUN git config --global --add safe.directory /sdks/flutter
 
+# Imposta una directory di cache personalizzata
+ENV FLUTTER_STORAGE_BASE_URL="https://storage.googleapis.com"
+ENV FLUTTER_GIT_URL="https://github.com/flutter/flutter.git"
+ENV PUB_CACHE="/home/flutteruser/.pub-cache"
+
 # Installa le dipendenze di Flutter
 RUN flutter pub get
 
