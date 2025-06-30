@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>📄 Upload Avanzato</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .preview-img, .img-preview {
+      max-height: 100px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin: 5px;
+    }
+    #toastSuccess {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+    }
+  </style>
+</head>
+<body class="container py-4">
+  <h2 class="mb-4">📄 Upload Avanzato con Anteprima</h2>
+  {% if user %}
+    <p>Ciao, <strong>{{ user.username }}</strong> 👋</p>
+  {% endif %}
+
+  <!-- Fotocamera -->
+  <div class="mb-4 d-flex gap-2">
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden multiple>
+    <button class="btn btn-outline-primary" onclick="document.getElementById('cameraInput').click()">📷 Scatta o scegli foto</button>
+    <button class="btn btn-success d-none" id="confirmUploadBtn">✅ Carica immagini scelte</button>
+  </div>
+  <div id="galleryPreview" class="d-flex flex-wrap mb-3"></div>
+
+  <!-- Toast Successo -->
+  <div id="toastSuccess" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">✅ File caricato con successo!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Chiudi"></button>
+    </div>
+  </div>
+
+  <!-- Navigazione -->
+  <div class="mb-3 d-flex gap-2">
+    <a href="/" class="btn btn-secondary">🔙 Home</a>
+    <a href="/browse" class="btn btn-info">🖼️ Galleria</a>
+    <a href="/logout" class="btn btn-outline-danger">🚪 Logout</a>
+  </div>
+
+  <!-- Form Upload -->
+  <form id="uploadForm" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Macro Categoria</label>
+      <select class="form-select" name="macro" id="macroSelect" required>
+        <option value="">-- Seleziona --</option>
+        <option>00 = Rilievi</option>
+        <option>01 = Produzione</option>
+        <option>02 = As build</option>
+        <option>03 = Spedizione</option>
+        <option>04 = Montaggio</option>
+        <option>05 = Funzionamento</option>
+        <option>06 = Inconvenienti</option>
+        <option>07 = Magazzino</option>
+        <option>08 = Laboratorio</option>
+      </select>
+    </div>
+
+    <div class="mb-3" id="lineaGroup" style="display: none;">
+      <label class="form-label">Linea</label>
+      <select class="form-select" name="linea" id="lineaSelect">
+        <option value="">-- Seleziona --</option>
+        <option>FILM</option>
+        <option>PET</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Commessa</label>
+      <input class="form-control" name="commessa" id="commessaInput" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Matricola</label>
+      <input class="form-control" name="matricola" id="matricolaInput" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Item</label>
+      <input class="form-control" name="item" id="itemInput" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Immagini</label>
+      <input type="file" class="form-control" accept="image/*" name="images[]" id="imageInput" multiple required>
+      <div id="preview" class="d-flex flex-wrap mt-2"></div>
+    </div>
+
+    <button type="submit" class="btn btn-success">📤 Carica Immagini</button>
+  </form>
+
+  <div class="form-group mt-3">
+    <label for="note">Note (opzionale)</label>
+    <input type="text" class="form-control" name="note" id="note" placeholder="Inserisci una nota...">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("uploadForm");
+    const imageInput = document.getElementById("imageInput");
+    const cameraInput = document.getElementById("cameraInput");
+    const preview = document.getElementById("preview"); // solo UNA volta questa variabile
+    const galleryPreview = document.getElementById("galleryPreview");
+    const confirmBtn = document.getElementById("confirmUploadBtn");
+    const toastSuccess = document.getElementById("toastSuccess");
+
+    let selectedFiles = [];
+
+    // Aggiungere evento di cambio per la selezione del macro
+    document.getElementById("macroSelect").addEventListener("change", function () {
+      document.getElementById("lineaGroup").style.display = this.value.includes("05 = Funzionamento") ? "block" : "none";
+    });
+
+    // Funzione per aggiungere l'anteprima dell'immagine
+    function addPreview(files, container) {
+      selectedFiles = Array.from(files);
+      container.innerHTML = ""; // Azzera l'anteprima precedente
+
+      console.log("Files selezionati:", selectedFiles); // Log per verificare i file selezionati
+
+      selectedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "text-center me-3";
+
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.className = "img-preview d-block";
+          img.style.maxWidth = "150px";
+          img.style.marginBottom = "5px";
+
+          const filename = document.createElement("div");
+          filename.innerText = file.name;
+          filename.style.fontSize = "0.8rem";
+
+          wrapper.appendChild(img);
+          wrapper.appendChild(filename);
+          container.appendChild(wrapper);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Aggiungi anteprima quando si selezionano file da "Immagini"
+    imageInput.addEventListener("change", () => {
+      console.log("Immagini selezionate dall'input:", imageInput.files); // Log per il controllo dell'input delle immagini
+      addPreview(imageInput.files, preview);
+    });
+
+    // Aggiungi anteprima quando si scattano foto
+    cameraInput.addEventListener("change", () => {
+      console.log("Immagini scattate dalla fotocamera:", cameraInput.files); // Log per il controllo della fotocamera
+      addPreview(cameraInput.files, galleryPreview);
+      confirmBtn.classList.toggle("d-none", cameraInput.files.length === 0);
+    });
+
+    // Gestisci il click sul bottone di conferma
+    confirmBtn.addEventListener("click", () => {
+      form.dispatchEvent(new Event("submit"));
+    });
+
+    // Gestisci la sottomissione del form
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+
+      const macro = document.getElementById("macroSelect").value;
+      const linea = document.getElementById("lineaSelect").value;
+      const commessa = document.getElementById("commessaInput").value.trim();
+      const matricola = document.getElementById("matricolaInput").value.trim();
+      const item = document.getElementById("itemInput").value.trim();
+      const note = document.getElementById("note")?.value || "";
+
+      // Verifica se tutti i campi sono compilati
+      if (!macro || !commessa || !matricola || !item || selectedFiles.length === 0) {
+        alert("⚠️ Compila tutti i campi obbligatori e seleziona almeno un'immagine.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("macro", macro);
+      formData.append("linea", linea);
+      formData.append("commessa", commessa);
+      formData.append("matricola", matricola);
+      formData.append("item", item);
+      formData.append("note", note);
+
+      selectedFiles.forEach(file => {
+        formData.append("image", file);
+      });
+
+      const submitBtn = form.querySelector("button[type=submit]");
+      submitBtn.disabled = true;
+
+      // Caricamento delle immagini
+      uploadImages(formData, () => {
+        form.reset();
+        preview.innerHTML = "";
+        galleryPreview.innerHTML = "";
+        selectedFiles = [];
+        confirmBtn.classList.add("d-none");
+
+        setTimeout(() => {
+          submitBtn.disabled = false;
+        }, 2000);
+      });
+    });
+
+    function uploadImages(formData, onSuccess) {
+      console.log("Invio dati al server con i seguenti file:", selectedFiles); // Log per il controllo dei dati inviati
+
+      fetch("/upload", {
+        method: "POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("Risposta dal server:", data); // Log per vedere cosa restituisce il server
+          if (data.status === "success") {
+            showSuccessToast("✅ Upload completato!");
+            if (onSuccess) onSuccess();
+          } else {
+            alert("❌ Errore: " + data.message);
+          }
+        })
+        .catch(() => alert("❌ Errore di rete durante il caricamento"));
+    }
+
+    function showSuccessToast(msg) {
+      toastSuccess.querySelector(".toast-body").innerText = msg;
+      new bootstrap.Toast(toastSuccess).show();
+    }
+  });
+  </script>
+
+</body>
+</html>
