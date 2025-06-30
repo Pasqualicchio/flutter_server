@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from PIL import Image
 from pathlib import Path
 from flask import send_from_directory
+from flask_cors import CORS
 import os
 import glob
 
@@ -21,6 +22,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024 * 1024  # 1 GB
 db = SQLAlchemy(app)
+CORS(app)  # <--- abilita tutte le origini
 
 # Percorsi base
 BASE_DIR = Path(__file__).resolve().parent
@@ -436,6 +438,9 @@ def serve_image(filename):
 def drop_and_drag_ui():
     return render_template('dropanddrag.html')
 
+@app.route('/api/hello')
+def hello():
+    return "Ciao da Flask (server.py)!"
 
 @app.route('/upload-drag', methods=['POST'])
 @login_required
@@ -515,7 +520,8 @@ def upload_drag():
 
 # Avvio del server
 if __name__ == "__main__":
-    app.run(debug=True, port=5005, use_reloader=False)
+    app.run(host='0.0.0.0', port=5005, debug=True)
+
 
 
 

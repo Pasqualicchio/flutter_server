@@ -332,6 +332,32 @@
     uploadBtn.classList.remove('d-none');
   }
 
+  function handleVideoFiles(files) {
+  filePreviewContainer.innerHTML = ''; // Pulisce l'anteprima precedente
+
+  Array.from(files).forEach((file) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const fileContainer = document.createElement('div');
+      fileContainer.classList.add('d-flex', 'flex-column', 'align-items-center', 'mb-3');
+
+      // Creare l'anteprima video
+      const video = document.createElement('video');
+      video.src = reader.result;
+      video.classList.add('thumb', 'mb-2');
+      video.controls = true; // Aggiungi controlli video
+      fileContainer.appendChild(video);
+
+      // Mostrare l'anteprima
+      filePreviewContainer.appendChild(fileContainer);
+    };
+
+    reader.readAsDataURL(file);  // Legge il file come URL di dati
+  });
+}
+
+
   // Funzione per caricare i file selezionati
   uploadBtn.addEventListener('click', () => {
     const files = fileInput.files;
